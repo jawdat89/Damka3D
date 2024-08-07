@@ -10,56 +10,81 @@
 #include "Steps.h"
 
 
-//::::::::::::::::::MINMAX::::::::::::::::::::::
+/**
+ * MiniMax algorithm implementation.
+ * @param checkers - The current state of the checkers game.
+ * @param depth - The depth to which the algorithm should explore.
+ * @param turn - The current player's turn (1 for maximizing player, 0 for minimizing player).
+ * @return The evaluation score of the board.
+ */
 int miniMax(Checkers checkers, int depth, int turn) {
+	// Base case: if we've reached the maximum depth, evaluate the board
 	if (depth == 0)
 		return evaluateBoard(checkers);
+
 	if (turn) {
-		int bestValue = -_CRT_INT_MAX;
-		Step *stepRoot = generateMoves(checkers, turn);
-		if (isThereAttackMoves(stepRoot))
+		// Maximizing player (assumed to be player with 'turn == 1')
+
+		int bestValue = -_CRT_INT_MAX; // Initialize to the smallest possible value
+		Step *stepRoot = generateMoves(checkers, turn); // Generate all possible moves
+		if (isThereAttackMoves(stepRoot)) // Filter attack moves if available
 			stepRoot = filterAttackMoves(stepRoot);
 		Step *step = stepRoot;
+
+		// Iterate through all possible moves
 		while (step) {
-			Checkers check = applyMove(checkers, step);
-			int value = miniMax(check, depth - 1, PLAYER);
-			if (value > bestValue) {
+			Checkers check = applyMove(checkers, step); // Apply the move and get the new board state
+			int value = miniMax(check, depth - 1, PLAYER); // Recursively call miniMax for the opponent
+			if (value > bestValue) { // Choose the maximum value
 				bestValue = value;
 			}
 			step = step->next;
 		}
-		releaseStep(stepRoot);
-		return bestValue;
+		releaseStep(stepRoot); // Free the memory allocated for moves
+		return bestValue; // Return the best value found
 	} else {
-		int bestValue = _CRT_INT_MAX;
-		Step *stepRoot = generateMoves(checkers, turn);
-		if (isThereAttackMoves(stepRoot))
+		// Minimizing player (assumed to be player with 'turn == 0')
+
+		int bestValue = _CRT_INT_MAX; // Initialize to the largest possible value
+		Step *stepRoot = generateMoves(checkers, turn); // Generate all possible moves
+		if (isThereAttackMoves(stepRoot)) // Filter attack moves if available
 			stepRoot = filterAttackMoves(stepRoot);
 		Step *step = stepRoot;
+
+		// Iterate through all possible moves
 		while (step) {
-			Checkers check = applyMove(checkers, step);
-			int value = miniMax(check, depth - 1, COMPUTER);
+			Checkers check = applyMove(checkers, step); // Apply the move and get the new board state
+			int value = miniMax(check, depth - 1, COMPUTER); // Choose the minimum value
 			if (value < bestValue) {
 				bestValue = value;
 			}
 			step = step->next;
 		}
-		releaseStep(stepRoot);
-		return bestValue;
+		releaseStep(stepRoot); // Free the memory allocated for moves
+		return bestValue; // Return the best value found
 	}
 }
 
+/**
+ * Applies a move to the checkers board and returns the new board state.
+ * @param checkers - The current state of the checkers game.
+ * @param step - The move to apply.
+ * @return The new state of the checkers game after applying the move.
+ */
 Checkers applyMove(Checkers checkers, Step *step) {
 
-	Checkers temp(checkers);
+	Checkers temp(checkers); // Create a copy of the current board state
 
+	// Move the stone to the new position
 	temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone = temp.block[(step->oldrow)* temp.event.cells_per_row + step->oldcol]->stone;
 
+	// Set the animation parameters
 	temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->isAnimating = true;
 	temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->animx = temp.block[(step->oldrow)* temp.event.cells_per_row + step->oldcol]->x + temp.stones_length;
 	temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->animy = temp.block[(step->oldrow)* temp.event.cells_per_row + step->oldcol]->y + temp.stones_height;
 	temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->animz = temp.block[(step->oldrow)* temp.event.cells_per_row + step->oldcol]->z + temp.stones_width;
 
+	// Update the board state
 	temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->isEmpty = temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->isEmpty;
 	temp.block[(step->oldrow)* temp.event.cells_per_row + step->oldcol]->isEmpty = true;;
 
@@ -68,39 +93,47 @@ Checkers applyMove(Checkers checkers, Step *step) {
 
 	temp.block[(step->oldrow)* temp.event.cells_per_row + step->oldcol]->stone = nullptr;
 
+	// Handle promotion to king
 	if (step->newrow == 0 && temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->type == WHITE)
 		temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->state = STONE_KING;
 	if (step->newrow == 7 && temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->type == BLACK)
 		temp.block[(step->newrow)* temp.event.cells_per_row + step->newcol]->stone->state = STONE_KING;
 
 
-
+	// Handle attack moves	
 	if (step->attack) {
 		temp.block[(step->attackrow) * temp.event.cells_per_row + step->attackcol]->stone->y = temp.event.y - 1;
 		temp.block[(step->attackrow) * temp.event.cells_per_row + step->attackcol]->turn = EMPTY;
 		temp.block[(step->attackrow) * temp.event.cells_per_row + step->attackcol]->isEmpty = true;
 		temp.block[(step->attackrow) * temp.event.cells_per_row + step->attackcol]->stone = nullptr;
 	}
-	return temp;
+	return temp; // Return the new board state
 }
 
+/**
+ * Evaluates the board state and returns a score based on the positions of the stones.
+ * @param checkers - The current state of the checkers game.
+ * @return The evaluation score of the board.
+ */
 int evaluateBoard(Checkers &checkers) {
 	int whiteStones = 0, blackStones = 0;
+
+	// Iterate through the board and calculate the score
 	for (int row = 0; row < checkers.event.cells_per_row; row++)
 		for (int col = 0; col < checkers.event.cells_per_row; col++) {
 			if (!checkers.block[row + col * checkers.event.cells_per_row]->isEmpty) {
 				if (checkers.block[row + col * checkers.event.cells_per_row]->stone != nullptr) {
 					if (checkers.block[row + col * checkers.event.cells_per_row]->stone->type == WHITE) {
 						if (checkers.block[row + col * checkers.event.cells_per_row]->stone->state == STONE_KING) {
-							whiteStones += 10;
+							whiteStones += 10; // King stones are more valuable
 						} else {
-							whiteStones += checkers.event.cells_per_row - row;
+							whiteStones += checkers.event.cells_per_row - row; // Regular stones are valued based on their row
 						}
 					} else {
 						if (checkers.block[row + col * checkers.event.cells_per_row]->stone->state == STONE_KING) {
-							blackStones += 10;
+							blackStones += 10;  // King stones are more valuable
 						} else {
-							blackStones += row;
+							blackStones += row; // Regular stones are valued based on their row
 						}
 					}
 				}
@@ -120,38 +153,66 @@ int evaluateBoard(Checkers &checkers) {
 									else
 											blackStones++;
 	}*/
-	return whiteStones - blackStones;
+	return whiteStones - blackStones; // Return the difference in scores
 }
 
+/**
+ * Determines the best move for the computer using the MiniMax algorithm.
+ * @param checkers - The current state of the checkers game.
+ * @param turn - The turn indicator (0 for PLAYER, 1 for COMPUTER).
+ * @return A pointer to the best move.
+ */
 Step *getBestMove(Checkers checkers, int turn) {
+	// Generate all possible moves for the computer
 	Step *stepRoot = generateMoves(checkers, COMPUTER);
+
+	// Filter to only attack moves if any exist
 	if (isThereAttackMoves(stepRoot))
 		stepRoot = filterAttackMoves(stepRoot);
 
 	Step *step = stepRoot;
+
+	// Perform the MiniMax algorithm with a depth of 3
 	int minimaxResult = miniMax(checkers, 3, COMPUTER);
+
+	// Iterate through all possible moves to find the best one
 	while (step) {
 		//printf("POSSIBLE MOVE: oldcol: %d - oldow: %d | newcol: %d - newrow: %d | attack = %d\n", step->oldcol, step->oldrow, step->newcol, step->newrow, step->attack);
 
+		// Apply the current move and evaluate the board state
 		Checkers check = applyMove(checkers, step);
 		int evalresult = miniMax(check, 2, COMPUTER);
+
 		//printf("MAX: %d EVAL: %d\n", minimaxResult, evalresult);
+
+		// If the evaluated result matches the best MiniMax result, break
 		if (evalresult == minimaxResult)
 			break;
 		step = step->next;
 	}
+
+	// If no specific best move was found, default to the first move
 	if (step == nullptr)
 		step = stepRoot;
+
+	// Allocate memory for the new best move step
 	Step *newStep = (Step*)malloc(sizeof(Step));
 	newStep = &Step(step);
+
+	// Release the memory allocated for the list of possible moves
 	releaseStep(stepRoot);
+	
 	//printf("BEST MOVE: oldcol: %d - oldow: %d | newcol: %d - newrow: %d | attack = %d\n", newStep->oldcol, newStep->oldrow, newStep->newcol, newStep->newrow, newStep->attack);
 
 	return newStep;
 }
 
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+/**
+ * Generates all possible moves for the given player.
+ * @param checkers - The current state of the checkers game.
+ * @param turn - The current player's turn (1 for maximizing player, 0 for minimizing player).
+ * @return A linked list of possible moves.
+ */
 Step *generateMoves(Checkers &checkers, int turn) {
 
 	Step *root = (Step*)malloc(sizeof(Step));
@@ -165,6 +226,7 @@ Step *generateMoves(Checkers &checkers, int turn) {
 	root->attackrow = NULL;
 	root->next = NULL;
 
+	// Iterate through the board to generate moves
 	if (turn == COMPUTER) {
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
@@ -1475,11 +1537,15 @@ Step *generateMoves(Checkers &checkers, int turn) {
 		}
 	}
 
-	root = root->next;
-	return root;
+	root = root->next; // Skip the initial dummy node
+	return root; // Return the generated moves
 
 }
 
+/**
+ * Frees the memory allocated for a linked list of moves.
+ * @param step - The linked list of moves to release.
+ */
 void releaseStep(Step * step)
 {
 	while (step) {
@@ -1489,6 +1555,11 @@ void releaseStep(Step * step)
 	}
 }
 
+/**
+ * Filters a list of moves to include only attack moves.
+ * @param moves - The linked list of moves to filter.
+ * @return A linked list of attack moves.
+ */
 Step *filterAttackMoves(Step *moves) {
 	Step * temp = moves;
 	if (!isThereAttackMoves(temp))
@@ -1512,10 +1583,15 @@ Step *filterAttackMoves(Step *moves) {
 		}
 		temp = temp->next;
 	}
-	root = root->next;
-	return root;
+	root = root->next; // Skip the initial dummy node
+	return root; // Return the filtered moves
 }
 
+/**
+ * Checks if there are any attack moves in a list of moves.
+ * @param moves - The linked list of moves to check.
+ * @return 1 if there are attack moves, 0 otherwise.
+ */
 int isThereAttackMoves(Step *moves) {
 	Step * temp = moves;
 	while (temp) {
@@ -1526,9 +1602,17 @@ int isThereAttackMoves(Step *moves) {
 	return 0;
 }
 
+/**
+ * Handles a click event in the checkers game.
+ * @param checkers - The current state of the checkers game.
+ * @param col - The column of the clicked cell.
+ * @param row - The row of the clicked cell.
+ */
 void applyClick(Checkers &checkers, const int & col, const int & row)
 {
 	if (!checkers.block[row * checkers.event.cells_per_row + col]->isEmpty && checkers.block[row * checkers.event.cells_per_row + col]->turn == PLAYER) {
+		// Handle the selection of a stone
+		
 		if (checkers.stone_selected = true) {
 			for (auto& i : checkers.block) {
 				if (i->isSelected) {
@@ -1559,6 +1643,8 @@ void applyClick(Checkers &checkers, const int & col, const int & row)
 		releaseStep(stepRoot);
 
 	} else {
+		// Handle the movement of a selected stone
+
 		if (checkers.stone_selected) {
 			if (checkers.block[(row)* checkers.event.cells_per_row + col]->state == BLOCK_OPTIONAL_PATH) {
 				for (int row1 = 0; row1 < checkers.event.cells_per_row; row1++) {
@@ -1671,6 +1757,10 @@ void applyClick(Checkers &checkers, const int & col, const int & row)
 	}
 }
 
+/**
+ * Applies the best move for the computer.
+ * @param checkers - The current state of the checkers game.
+ */
 void applyComputerStep(Checkers & checkers)
 {
 	if (checkers.event.difficulty == MULTIPLAYER) {
@@ -1836,6 +1926,10 @@ void applyComputerStep(Checkers & checkers)
 	}
 }
 
+/**
+ * Checks the result of the game.
+ * @param checkers - The current state of the checkers game.
+ */
 void check_result(Checkers& checkers)
 {
 	if (checkers.result != RESULT_NOTYET)
@@ -1862,6 +1956,12 @@ void check_result(Checkers& checkers)
 	releaseStep(stepRoot1);
 }
 
+/**
+ * Returns the absolute difference between two floating-point numbers.
+ * @param x - The first number.
+ * @param y - The second number.
+ * @return The absolute difference between x and y.
+ */
 GLfloat difference(const GLfloat& x, const GLfloat& y) {
 	if (x > y)
 		return x - y;
