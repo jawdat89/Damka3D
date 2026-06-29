@@ -1,7 +1,7 @@
 /* ========================================================================== */
 /*                                                                            */
 /*   main.cpp                                                                 */
-/*   (c) 2018 Jawdat Abdullah & Ronnie Moadi                                  */
+/*   (c) 2018 Student authors & co-author                                  */
 /*                                                                            */
 /*   main file of the project                                                 */
 /*   connecting all the pieces of the game project                            */
@@ -1018,7 +1018,7 @@ void print_result()
 void print_intro()
 {
 	printf("\nDamka3D Game\n");
-	printf("By: Jawdat Abdullah & Ronny Moadi \n");
+	printf("By: Student authors & co-author \n");
 	printf("Checkers game (draughts)  \n");
 	printf("\n");
 }

@@ -5,7 +5,7 @@
 
 ## Overview
 
-Damka3D is a strategic checkers game developed as a final project for the Practical Software Engineer program at Ort Braude College. The project was supervised by Shadi Asaakla and developed by Jawdat Abdallah and Roni Mouadi.
+Damka3D is a strategic checkers game developed as a final project for the Practical Software Engineer program at Ort Braude College. The project was supervised by Shadi Asaakla and developed by a student team.
 
 ## Project Description
 

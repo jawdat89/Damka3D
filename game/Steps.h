@@ -1,7 +1,7 @@
 /* ========================================================================== */
 /*                                                                            */
 /*   Steps.h                                                                  */
-/*   (c) 2018 Jawdat Abdullah & Ronnie Moadi                                  */
+/*   (c) 2018 Student authors & co-author                                  */
 /*                                                                            */
 /*   Global functions of steps                                                */
 /*   are used in the checkers class						                      */

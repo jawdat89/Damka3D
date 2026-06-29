@@ -1,7 +1,7 @@
 /* ========================================================================== */
 /*                                                                            */
 /*   checkers.h                                                               */
-/*   (c) 2018 Jawdat Abdullah & Ronnie Moadi                                  */
+/*   (c) 2018 Student authors & co-author                                  */
 /*                                                                            */
 /*   Checkers game                                                            */
 /*   class for declaring a game                                               */

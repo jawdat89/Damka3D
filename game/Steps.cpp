@@ -1,7 +1,7 @@
 /* ========================================================================== */
 /*                                                                            */
 /*   Steps.cpp                                                                */
-/*   (c) 2018 Jawdat Abdullah & Ronnie Moadi                                  */
+/*   (c) 2018 Student authors & co-author                                  */
 /*                                                                            */
 /*   Global functions implementation of steps                                 */
 /*   used in the checkers class			    			                      */
